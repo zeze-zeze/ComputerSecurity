@@ -54,10 +54,10 @@ int main(int argc, char **argv)
 	//while(1)
 		//dns_send(trgt_ip, trgt_p, dns_srv, 53, dns_rcrd);
 	//while(1) {
-		dns_send(trgt_ip, trgt_p, srv_ip, 53, "www.google.com");
-		dns_send(trgt_ip, trgt_p, srv_ip, 53, "https://www.cau.edu/");
+		//dns_send(trgt_ip, trgt_p, srv_ip, 53, "www.google.com");
+		//dns_send(trgt_ip, trgt_p, srv_ip, 53, "https://www.cau.edu/");
 		dns_send(trgt_ip, trgt_p, srv_ip, 53, "www.amazon.com");
-		dns_send(trgt_ip, trgt_p, srv_ip, 53, "ieee.org");
+		//dns_send(trgt_ip, trgt_p, srv_ip, 53, "ieee.org");
 	//}	
 	return 0;
 }

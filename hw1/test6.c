@@ -15,14 +15,16 @@
 typedef struct iphdr iphdr;
 typedef struct udphdr udphdr;
 
+/* change url to specific form */
 void dns_format(unsigned char *, unsigned char *);
+
+/* calculate checksum */
 unsigned short csum(unsigned short *, int);
 
-// DNS header struct
+/* DNS header struct */
 typedef struct
 {
-	unsigned short id; 		// ID
-	// unsigned short flags;	// DNS Flags
+	unsigned short id;
     unsigned char rd : 1;
     unsigned char tc : 1;
     unsigned char aa : 1;
@@ -33,13 +35,13 @@ typedef struct
     unsigned char ad : 1;
     unsigned char z : 1;
     unsigned char ra : 1;
-	unsigned short qcount;	// Question Count
-	unsigned short ans;		// Answer Count
-	unsigned short auth;	// Authority RR
-	unsigned short add;		// Additional RR
+	unsigned short qcount;
+	unsigned short ans;
+	unsigned short auth;
+	unsigned short add;
 }dnshdr;
 
-// Question types
+/* Question types */
 typedef struct
 {
 	unsigned short qtype;
@@ -71,7 +73,6 @@ int main(int argc, char **argv){
     // dns
     dnshdr *dns = (dnshdr *)&dns_data;
     dns->id = (unsigned short) htons(getpid());
-    //dns->flags = htons(0x0100);
     dns->qr = 0;
     dns->opcode = 0;
     dns->aa = 0;
