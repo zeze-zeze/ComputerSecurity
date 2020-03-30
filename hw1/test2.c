@@ -34,7 +34,7 @@ struct DNS_HEADER
 struct query
 {
 	unsigned char name[14];
-	struct question *question;
+	//struct question *question;
 };
 
 struct QUESTION

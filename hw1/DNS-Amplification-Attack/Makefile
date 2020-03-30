@@ -1,4 +1,4 @@
 all:
-	clang -o dns main.c dns.c
+	gcc -o dns main.c dns.c
 clean:
 	rm -f dns
