@@ -9,7 +9,7 @@
 #include <arpa/inet.h>
 
 #define PCKT_LEN 65536
-#define DNS_QUERY_NAME_DEFAULT "google.com"
+#define DNS_QUERY_NAME_DEFAULT "www.google.com"
 
 struct DNS_HEADER
 {
