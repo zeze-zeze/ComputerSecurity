@@ -57,7 +57,7 @@ int main(int argc, char **argv){
   saddr.sin_family = AF_INET;
   daddr.sin_family = AF_INET;
 
-  saddr.sin_port = htons(7);
+  saddr.sin_port = htons(53);
   daddr.sin_port = htons(53);
 
   saddr.sin_addr.s_addr = inet_addr(argv[1]);
@@ -74,7 +74,7 @@ int main(int argc, char **argv){
   ip->saddr = inet_addr(argv[1]);
   ip->daddr = inet_addr(argv[2]);
 
-  udp->source = htons(7);
+  udp->source = htons(53);
   udp->dest = htons(53);
   udp->len = htons(sizeof(struct udphdr) + sizeof(DNS));
   udp->check = 0;

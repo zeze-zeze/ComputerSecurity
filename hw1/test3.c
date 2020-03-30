@@ -7,9 +7,21 @@
 #include <linux/ip.h>
 #include <linux/udp.h>
 #include <arpa/inet.h>
+#include <netinet/ether.h>
+#include <netinet/if_ether.h>
+#include <asm/sockios.h>
 
 #define PCKT_LEN 65536
-#define DNS_QUERY_NAME_DEFAULT "www.google.com"
+#define DNS_QUERY_NAME_DEFAULT "www.chongfer.cn"
+
+struct ps_hdr
+{
+	u_int32_t saddr;
+	u_int32_t daddr;
+	u_int8_t filler;
+	u_int8_t protocol;
+	u_int16_t len;
+};
 
 struct DNS_HEADER
 {
@@ -33,7 +45,7 @@ struct DNS_HEADER
 
 struct query
 {
-	unsigned char name[15];
+	unsigned char name[14];
 	//struct QUESTION *question;
 };
 
@@ -64,19 +76,9 @@ void ChangetoDnsNameFormat(unsigned char* dns, unsigned char* host)
 
 unsigned short csum(unsigned short *buf, int nwords)
 {
-	register long sum;
-	unsigned short oddbyte;
-	register short answer;
-	sum = 0;
-	while(nwords>1){
-		sum+=*buf++;
-		nwords-=2;
-	}
-	if(nwords==1){
-		oddbyte=0;
-		*((unsigned char *)&oddbyte)=*(unsigned char *)buf;
-		sum+=oddbyte;
-	}
+	unsigned long sum;
+	for(sum=0; nwords>0; nwords--)
+		sum+= *buf++;
 	sum = (sum >> 16) + (sum & 0xffff);
 	sum += (sum >>16);
 	return (unsigned short)(~sum);
@@ -96,14 +98,20 @@ int main(int argc, char const *argv[])
 	src_port = atoi(argv[2]);
 	dst_port = atoi(argv[4]);
 
+	unsigned char DNS[] = { 0xd8, 0xcb , 0x01, 0x00, 0x00, 0x01, 0x00 ,0x00,
+    0x00, 0x00, 0x00, 0x00, 0x03, 0x77, 0x77, 0x77,
+    0x08, 0x63, 0x68, 0x6f, 0x6e, 0x67, 0x66, 0x65,
+    0x72, 0x02, 0x63, 0x6e, 0x00, 0x00, 0x01, 0x00,
+    0x01};
+
 	struct DNS_HEADER *dns = NULL;
 	struct QUESTION *qinfo = NULL;
-
+	unsigned char *hostname = "www.google.com";
 	int sd;
 	int broadcast = 1;
 	unsigned char buffer[PCKT_LEN],*qname,*reader,host[100];
 	memset(buffer, 0 , PCKT_LEN); 
-	memcpy(host, DNS_QUERY_NAME_DEFAULT, strlen(DNS_QUERY_NAME_DEFAULT));
+	strcpy(host, hostname);
 	struct iphdr *ip = (struct iphdr *) buffer;
 	struct udphdr *udp = (struct udphdr *) (buffer + sizeof(struct iphdr));
 	
@@ -131,20 +139,21 @@ int main(int argc, char const *argv[])
 	ip->ihl = 5;
 	ip->version = 4;
 	ip->tos = 0;
-	ip->id = htons(getpid());
-	ip->ttl = 225;
+	ip->id = htons(54321);
+	ip->ttl = 64;
 	ip->protocol = IPPROTO_UDP;
 	ip->frag_off = 0;
 	ip->saddr = src_addr;
 	ip->daddr = dst_addr;
-	ip->tot_len = sizeof(struct iphdr) + sizeof(struct udphdr)+sizeof(struct DNS_HEADER)+ sizeof(struct query) + sizeof(struct QUESTION);
-	ip->check = csum((unsigned short *)buffer, sizeof(struct iphdr) + sizeof(struct udphdr)+sizeof(struct DNS_HEADER)+ (sizeof(struct query)) + sizeof(struct QUESTION));
+	ip->tot_len = sizeof(struct iphdr) + sizeof(struct udphdr)+sizeof(DNS);/*sizeof(struct DNS_HEADER)+ sizeof(struct query) + sizeof(struct QUESTION);*/
+	ip->check = 0;/*csum((unsigned short *)buffer, sizeof(struct iphdr) + sizeof(struct udphdr)+sizeof(struct DNS_HEADER)+ (sizeof(struct query)) + sizeof(struct QUESTION));*/
 
 	udp->source = htons(src_port);
 	udp->dest = htons(dst_port);
-	udp->len = htons(sizeof(struct udphdr)+sizeof(struct DNS_HEADER)+sizeof(struct query)+sizeof(struct QUESTION));
+	udp->len = htons(sizeof(struct udphdr)+sizeof(DNS));/*sizeof(struct DNS_HEADER)+sizeof(struct query)+sizeof(struct QUESTION));*/
+	udp->check = 0;
 
-	dns = (struct DNS_HEADER *)(buffer+sizeof(struct iphdr) +sizeof(struct udphdr));
+	/*dns = (struct DNS_HEADER *)(buffer+sizeof(struct iphdr) +sizeof(struct udphdr));
 
 	dns->id = (unsigned short) htons(0x66A4);
 	dns->qr = 0;
@@ -162,16 +171,16 @@ int main(int argc, char const *argv[])
 	dns->auth_count = 0;
 	dns->add_count = 0;
 	
-	struct query *Query = (struct query*)(buffer+ sizeof(struct iphdr)+sizeof(struct udphdr)+sizeof(struct DNS_HEADER));\
+	struct query *Query = (struct query*)(buffer+ sizeof(struct iphdr)+sizeof(struct udphdr)+sizeof(struct DNS_HEADER));
 	//memcpy(Query->name, host, strlen(host));
 	ChangetoDnsNameFormat(Query->name, host);
 	qinfo = (struct QUESTION*)(buffer+ sizeof(struct iphdr) + sizeof(struct udphdr)+sizeof(struct DNS_HEADER) + sizeof(struct query));
 
-	qinfo->qtype = htons(0x00ff);
-	qinfo->qclass = htons(0x1);
+	qinfo->qtype = htons(1);
+	qinfo->qclass = htons(1);
 	printf("\nSending Packet...\n");
-	
-
+*/	
+	memcpy(buffer + sizeof(struct iphdr) + sizeof(struct udphdr), DNS, sizeof(DNS));
 	if(sendto(sd,buffer,ip->tot_len,0,(struct sockaddr *)&sin, sizeof(sin)) <0){
 	perror("sendto()");
 	exit(3);
