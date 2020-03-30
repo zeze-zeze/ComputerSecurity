@@ -26,6 +26,26 @@ unsigned short csum(unsigned short *buf, int nwords)
   return (unsigned short)(~sum);
 }
 
+void ChangetoDnsNameFormat(unsigned char* dns,unsigned char* host) 
+{
+    int lock = 0 , i;
+    strcat((char*)host,".");
+     
+    for(i = 0 ; i < strlen((char*)host) ; i++) 
+    {
+        if(host[i]=='.') 
+        {
+            *dns++ = i-lock;
+            for(;lock<i;lock++) 
+            {
+                *dns++=host[lock];
+            }
+            lock++; //or lock=i+1;
+        }
+    }
+    *dns++='\0';
+}
+
 //DNS header structure
 struct dnshdr
 {
@@ -49,19 +69,11 @@ struct dnshdr
     unsigned short add_count; // number of resource entries
 };
 
-struct Query
+struct QUESTION
 {
-    char name[10];
-    unsigned short int qtype;
-    unsigned short int qclass;
+    unsigned short qtype;
+    unsigned short qclass;
 };
-
-struct Question
-{
-    unsigned short int qtype;
-    unsigned short int qclass;
-};
-
 
 int main(int argc, char const *argv[])
 {
@@ -83,8 +95,10 @@ int main(int argc, char const *argv[])
   struct iphdr *ip = (struct iphdr *) buffer;
   struct udphdr *udp = (struct udphdr *) (buffer + sizeof(struct iphdr));
 	struct dnshdr *dns = (struct dnshdr *) (buffer + sizeof(struct iphdr) + sizeof(struct udphdr));
-	struct Query *query = (struct Query *) (buffer + sizeof(struct iphdr) + sizeof(struct udphdr) + sizeof(struct dnshdr));
-	//struct Question *question = (struct Question *) (buffer + sizeof(struct iphdr) + sizeof(struct udphdr) + sizeof(struct dnshdr) + sizeof(struct Query));
+  unsigned char *qname = (unsigned char *) (buffer + sizeof(struct iphdr) + sizeof(struct udphdr) + sizeof(struct dnshdr));
+  char host[10] = "google.com";
+  ChangetoDnsNameFormat(qname, host);
+  struct QUESTION *qinfo = (struct QUESTION *) (buffer + sizeof(struct iphdr) + sizeof(struct udphdr) + sizeof(struct dnshdr) + strlen((const char*)qname) + 1);
 
   struct sockaddr_in sin;
   int one = 1;
@@ -115,7 +129,7 @@ int main(int argc, char const *argv[])
   ip->ihl      = 5;
   ip->version  = 4;
   ip->tos      = 16; // low delay
-  ip->tot_len  = sizeof(struct iphdr) + sizeof(struct udphdr) + sizeof(struct dnshdr) + sizeof(struct Query);
+  ip->tot_len  = sizeof(struct iphdr) + sizeof(struct udphdr) + sizeof(struct dnshdr) + strlen((const char*)qname) + 1 + sizeof(struct QUESTION);
   ip->id       = htons(54321);
   ip->ttl      = 64; // hops
   ip->protocol = 17; // UDP
@@ -127,7 +141,7 @@ int main(int argc, char const *argv[])
   udp->source = htons(src_port);
   // destination port number
   udp->dest = htons(dst_port);
-  udp->len = htons(sizeof(struct udphdr) + sizeof(struct dnshdr) + sizeof(struct Query));
+  udp->len = htons(sizeof(struct udphdr) + sizeof(struct dnshdr) + strlen((const char*)qname) + 1 + sizeof(struct QUESTION));
 
 	// dns query
 	dns->id = (unsigned short) htons(getpid());
@@ -149,19 +163,13 @@ int main(int argc, char const *argv[])
 	// point to the query portion
   // filed the data
   // DNS_QUERY_NAME_DEFAULT in here is "github.com"
-  memcpy(query->name, DNS_QUERY_NAME_DEFAULT, strlen(DNS_QUERY_NAME_DEFAULT));
-
-  query->qtype = htons(1); //type of the query , A , MX , CNAME , NS etc
-  query->qclass = htons(1);                     //its internet (lol)
-
+  qinfo->qtype = htons(1);
+  qinfo->qclass = htons(1);
 
   // calculate the checksum for integrity
-  ip->check = csum((unsigned short *)buffer,
-                   sizeof(struct iphdr) + sizeof(struct udphdr) + sizeof(struct dnshdr) + sizeof(struct dnshdr) + sizeof(struct Query));
-	printf("%d", sizeof(struct udphdr));
+  ip->check = csum((unsigned short *)buffer, sizeof(struct iphdr) + sizeof(struct udphdr) + sizeof(struct dnshdr) + strlen((const char*)qname) + 1 + sizeof(struct QUESTION));
 
-  if (sendto(sd, buffer, ip->tot_len, 0,
-             (struct sockaddr *)&sin, sizeof(sin)) < 0)
+  if (sendto(sd, buffer, ip->tot_len, 0, (struct sockaddr *)&sin, sizeof(sin)) < 0)
   {
     perror("sendto()");
     exit(3);
