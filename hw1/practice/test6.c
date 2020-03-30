@@ -12,6 +12,7 @@
 
 #define URL1 "www.google.com"
 #define URL2 "www.amazon.com"
+#define URL3 "ieee.org"
 typedef struct iphdr iphdr;
 typedef struct udphdr udphdr;
 
@@ -90,7 +91,7 @@ int main(int argc, char **argv){
 
     unsigned char *dns_name, url[32];
     dns_name = (unsigned char *)&dns_data[sizeof(dnshdr)];
-    strcpy(url, URL2);
+    strcpy(url, URL3);
     dns_format(dns_name, url);
 
     query *q = (query *)&dns_data[sizeof(dnshdr) + strlen(dns_name) + 1];
