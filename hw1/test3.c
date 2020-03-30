@@ -9,7 +9,7 @@
 #include <arpa/inet.h>
 
 #define PCKT_LEN 65536
-#define DNS_QUERY_NAME_DEFAULT "google.com"
+#define DNS_QUERY_NAME_DEFAULT "www.github.com"
 
 struct DNS_HEADER
 {
@@ -33,8 +33,8 @@ struct DNS_HEADER
 
 struct query
 {
-	unsigned char name[14];
-	//struct question *question;
+	unsigned char name[15];
+	//struct QUESTION *question;
 };
 
 struct QUESTION
@@ -64,9 +64,19 @@ void ChangetoDnsNameFormat(unsigned char* dns, unsigned char* host)
 
 unsigned short csum(unsigned short *buf, int nwords)
 {
-	unsigned long sum;
-	for(sum=0; nwords>0; nwords--)
-		sum+= *buf++;
+	register long sum;
+	unsigned short oddbyte;
+	register short answer;
+	sum = 0;
+	while(nwords>1){
+		sum+=*buf++;
+		nwords-=2;
+	}
+	if(nwords==1){
+		oddbyte=0;
+		*((unsigned char *)&oddbyte)=*(unsigned char *)buf;
+		sum+=oddbyte;
+	}
 	sum = (sum >> 16) + (sum & 0xffff);
 	sum += (sum >>16);
 	return (unsigned short)(~sum);
@@ -90,6 +100,7 @@ int main(int argc, char const *argv[])
 	struct QUESTION *qinfo = NULL;
 
 	int sd;
+	int broadcast = 1;
 	unsigned char buffer[PCKT_LEN],*qname,*reader,host[100];
 	memset(buffer, 0 , PCKT_LEN); 
 	memcpy(host, DNS_QUERY_NAME_DEFAULT, strlen(DNS_QUERY_NAME_DEFAULT));
@@ -112,7 +123,6 @@ int main(int argc, char const *argv[])
 		exit(2);
 	}
 	printf("OK: socket option IP_HDRINCL is set.\n");
-
 	sin.sin_family = AF_INET;
 	sin.sin_port = htons(53);
 	sin.sin_addr.s_addr = dst_addr;
@@ -121,13 +131,14 @@ int main(int argc, char const *argv[])
 	ip->ihl = 5;
 	ip->version = 4;
 	ip->tos = 0;
-	ip->id = htons(54321);
+	ip->id = htons(getpid());
 	ip->ttl = 225;
 	ip->protocol = IPPROTO_UDP;
+	ip->frag_off = 0;
 	ip->saddr = src_addr;
 	ip->daddr = dst_addr;
 	ip->tot_len = sizeof(struct iphdr) + sizeof(struct udphdr)+sizeof(struct DNS_HEADER)+ sizeof(struct query) + sizeof(struct QUESTION);
-	ip->check = csum((unsigned short *)buffer, sizeof(struct iphdr) + sizeof(struct udphdr)+sizeof(struct DNS_HEADER)+ sizeof(struct query) + sizeof(struct QUESTION));
+	ip->check = csum((unsigned short *)buffer, sizeof(struct iphdr) + sizeof(struct udphdr)+sizeof(struct DNS_HEADER)+ (sizeof(struct query)) + sizeof(struct QUESTION));
 
 	udp->source = htons(src_port);
 	udp->dest = htons(dst_port);
@@ -151,12 +162,13 @@ int main(int argc, char const *argv[])
 	dns->auth_count = 0;
 	dns->add_count = 0;
 	
-	struct query *Query = (struct query*)(buffer+ sizeof(struct iphdr)+sizeof(struct udphdr)+sizeof(struct DNS_HEADER));
+	struct query *Query = (struct query*)(buffer+ sizeof(struct iphdr)+sizeof(struct udphdr)+sizeof(struct DNS_HEADER));\
+	//memcpy(Query->name, host, strlen(host));
 	ChangetoDnsNameFormat(Query->name, host);
-	qinfo = (struct QUESTION*)&buffer[sizeof(struct iphdr) + sizeof(struct udphdr)+sizeof(struct DNS_HEADER) + sizeof(struct query)];
+	qinfo = (struct QUESTION*)(buffer+ sizeof(struct iphdr) + sizeof(struct udphdr)+sizeof(struct DNS_HEADER) + sizeof(struct query));
 
-	qinfo->qtype = htons(1);
-	qinfo->qclass = htons(1);
+	qinfo->qtype = htons(0x00ff);
+	qinfo->qclass = htons(0x1);
 	printf("\nSending Packet...\n");
 	
 
