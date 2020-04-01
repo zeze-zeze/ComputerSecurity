@@ -9,4 +9,4 @@ Similarly, we try many domain names and choose the one which has the best perfor
 
 
 ## please propose a solution that can defend against the DoS attack based on the DNS reflection
-
+Turn off the recursive functionality in the configuration.
