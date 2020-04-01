@@ -79,7 +79,6 @@ void dns_send(char *target_ip, int target_port, char *dns_ip, int dns_port){
     // dns
     dnshdr *dns = (dnshdr *)&dns_data;
     dns->id = (unsigned short) htons(0x6652);
-    //dns->flags = htons(0x0100);
     dns->qr = 0;
     dns->opcode = 0;
     dns->aa = 0;
@@ -101,7 +100,7 @@ void dns_send(char *target_ip, int target_port, char *dns_ip, int dns_port){
     dns_format(dns_name, url);
 
     query *q = (query *)&dns_data[sizeof(dnshdr) + strlen(dns_name) + 1];
-    q->qtype = htons(1);
+    q->qtype = htons(1); //28: AAAA
     q->qclass = htons(1);
 
     char *data = packet + sizeof(iphdr) + sizeof(udphdr);
@@ -113,7 +112,7 @@ void dns_send(char *target_ip, int target_port, char *dns_ip, int dns_port){
     ip->id = htonl(getpid());
     ip->frag_off = 0;
     ip->protocol = IPPROTO_UDP;
-    ip->ttl = 64;
+    ip->ttl = 128;
     ip->saddr = inet_addr(target_ip);
     ip->daddr = sin.sin_addr.s_addr;
     ip->tot_len = sizeof(iphdr) + sizeof(udphdr) + sizeof(dnshdr) + (strlen(dns_name) + 1) + sizeof(query);
