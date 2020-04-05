@@ -1,0 +1,26 @@
+The name is too long, 239 chars total.
+Trying to shorten...
+New name is l.php?u=https:%2F%2Fcdn.fbsbx.com%2Fv%2Ft59.2708-21%2F92559694_521632832089555_6662663812870569984_n.c%2Fhw1.c?_nc_cat=102&_nc_sid=0cab14&_nc_ohc=_4oYEiWYjXAAX-38rhc&_nc_ht=cdn.fbsbx.com&oh=0c9939e16aa472a27d833c58aa4430da&oe=5E8B957C&d.
+--2020-04-05 20:03:57--  https://l.facebook.com/l.php?u=https%3A%2F%2Fcdn.fbsbx.com%2Fv%2Ft59.2708-21%2F92559694_521632832089555_6662663812870569984_n.c%2Fhw1.c%3F_nc_cat%3D102%26_nc_sid%3D0cab14%26_nc_ohc%3D_4oYEiWYjXAAX-38rhc%26_nc_ht%3Dcdn.fbsbx.com%26oh%3D0c9939e16aa472a27d833c58aa4430da%26oe%3D5E8B957C%26dl%3D1
+Resolving l.facebook.com (l.facebook.com)... 31.13.87.37, 2a03:2880:f117:84:face:b00c:0:14c9
+Connecting to l.facebook.com (l.facebook.com)|31.13.87.37|:443... connected.
+GnuTLS: Resource temporarily unavailable, try again.
+GnuTLS: Resource temporarily unavailable, try again.
+HTTP request sent, awaiting response... 302 Found
+Location: https://www.facebook.com/unsupportedbrowser [following]
+The name is too long, 239 chars total.
+Trying to shorten...
+New name is l.php?u=https:%2F%2Fcdn.fbsbx.com%2Fv%2Ft59.2708-21%2F92559694_521632832089555_6662663812870569984_n.c%2Fhw1.c?_nc_cat=102&_nc_sid=0cab14&_nc_ohc=_4oYEiWYjXAAX-38rhc&_nc_ht=cdn.fbsbx.com&oh=0c9939e16aa472a27d833c58aa4430da&oe=5E8B957C&d.
+--2020-04-05 20:03:57--  https://www.facebook.com/unsupportedbrowser
+Resolving www.facebook.com (www.facebook.com)... 31.13.87.36, 2a03:2880:f117:83:face:b00c:0:25de
+Connecting to www.facebook.com (www.facebook.com)|31.13.87.36|:443... connected.
+GnuTLS: Resource temporarily unavailable, try again.
+GnuTLS: Resource temporarily unavailable, try again.
+HTTP request sent, awaiting response... 200 OK
+Length: unspecified [text/html]
+Saving to: ‘l.php?u=https:%2F%2Fcdn.fbsbx.com%2Fv%2Ft59.2708-21%2F92559694_521632832089555_6662663812870569984_n.c%2Fhw1.c?_nc_cat=102&_nc_sid=0cab14&_nc_ohc=_4oYEiWYjXAAX-38rhc&_nc_ht=cdn.fbsbx.com&oh=0c9939e16aa472a27d833c58aa4430da&oe=5E8B957C&d’
+
+                       l.php?u=https:%2F%2Fcdn     [<=>                                                                                                 ]       0  --.-KB/s                                     l.php?u=https:%2F%2Fcdn.     [ <=>                                                                                                ]  41.54K   155KB/s                                    l.php?u=https:%2F%2Fcdn.f     [  <=>                                                                                               ]  46.26K  78.0KB/s               l.php?u=https:%2F%2Fcdn.fbsbx.com%2Fv%2Ft59.27     [   <=>                                                                                              ]  57.40K  96.8KB/s    in 0.6s    
+
+2020-04-05 20:03:58 (96.8 KB/s) - ‘l.php?u=https:%2F%2Fcdn.fbsbx.com%2Fv%2Ft59.2708-21%2F92559694_521632832089555_6662663812870569984_n.c%2Fhw1.c?_nc_cat=102&_nc_sid=0cab14&_nc_ohc=_4oYEiWYjXAAX-38rhc&_nc_ht=cdn.fbsbx.com&oh=0c9939e16aa472a27d833c58aa4430da&oe=5E8B957C&d’ saved [58776]
+

