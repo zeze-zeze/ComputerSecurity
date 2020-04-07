@@ -65,7 +65,9 @@ int main(int argc, char **argv){
     int i=0;
     for(i=0; i<3; i++){
         dns_send(target_ip, target_port, dns_ip, 53);
+        sleep(1);
     }
+    printf("%d packets done\n", i);
 }
    
 void dns_send(char *target_ip, int target_port, char *dns_ip, int dns_port){ 
