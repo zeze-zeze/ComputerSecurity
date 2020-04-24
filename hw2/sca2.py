@@ -1,5 +1,14 @@
-from scapy.all import ARP, Ether, srp
-import socket
+#!/usr/bin/env python3
+import netifaces as ni
+import os
+import scapy.all as scapy
+
+def get_ip(interfaces):
+    ip = []
+    for i in interfaces:
+        print(i)
+        ip.append(ni.ifaddresses(i)[2][0]['addr'])
+    return ip
 
 def get_mac(target_ip):
     # IP Address for the destination
@@ -29,6 +38,7 @@ def get_mac(target_ip):
         mac_list[client['ip']] = client['mac']
     return mac_list
 
+ip_list = get_ip(ni.interfaces())
 network = '.'.join(socket.gethostbyname(socket.gethostname()).split('.')[:-1]) + '.0/24'
 print(network)
 mac_list = get_mac(network)
