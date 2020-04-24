@@ -31,10 +31,10 @@ class Attack():
         scapy.send(packet,verbose=0)
 
     def restore(self, dest_ip, src_ip):
-	dest_mac = self.ip_mac[dest_ip]
-	src_mac = self.ip_mac[src_ip]
-	packet = scapy.ARP(op=2, pdst=dest_ip, hwdst=dest_mac, psrc=src_ip, hwsrc=src_mac)
-	scapy.send(packet,count=4,verbose=0)
+        dest_mac = self.ip_mac[dest_ip]
+        src_mac = self.ip_mac[src_ip]
+        packet = scapy.ARP(op=2, pdst=dest_ip, hwdst=dest_mac, psrc=src_ip, hwsrc=src_mac)
+        scapy.send(packet,count=4,verbose=0)
 
     def arp_spoofing(self):
         while 1:
