@@ -55,7 +55,7 @@ class Attack():
     def process_packet(self, packet):
         print('get', ' ', packet.haslayer(HTTPRequest))
         if packet.haslayer(HTTPRequest) and packet[HTTPRequest].Method.decode() == 'POST':
-            print(f"{packet[scapy.Raw].load}\n")
+            print("{packet[scapy.Raw].load}\n")
         scapy.send(packet, verbose=0)
         print('done\n')
 
