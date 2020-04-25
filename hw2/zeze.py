@@ -38,10 +38,9 @@ class Attack():
             self.ip_mac[received.psrc] = received.hwsrc
             if count == 0:
                 self.ap = received.psrc
-            elif count >= 1:
+            else:
                 self.victim.append(received.psrc)
             count += 1
-        self.victim = self.victim[:-1]
         self.ip_mac[self.attacker] = scapy.Ether().src
 
     def spoof(self, target_ip, spoof_ip): 
