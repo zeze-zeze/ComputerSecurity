@@ -78,6 +78,7 @@ attack = Attack()
 attack._enable_linux_iproute()
 attack.get_ip()
 attack.get_mac(attack.network[1])
+print(attack.attacker, attack.victim, attack.ap)
 print(attack.interfaces, attack.ip_list, '\n', attack.ip_mac, '\n', attack.network)
 while 1:
     attack.arp_spoofing()
