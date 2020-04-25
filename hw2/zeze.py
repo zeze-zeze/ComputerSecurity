@@ -64,7 +64,7 @@ class Attack():
 
     def process_packet(self, packet):
         if packet.haslayer(HTTPRequest) and packet[HTTPRequest].Method.decode() == 'POST':
-            print("{packet[scapy.Raw].load}\n")
+            print(packet[scapy.Raw].load, '\n')
 
 attack = Attack()
 attack._enable_linux_iproute()
