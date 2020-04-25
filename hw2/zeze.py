@@ -80,5 +80,5 @@ attack.get_ip()
 attack.get_mac(attack.network[1])
 print(attack.interfaces, attack.ip_list, '\n', attack.ip_mac, '\n', attack.network)
 while 1:
-    attack.ret_arp_spoofing()
+    attack.arp_spoofing()
     attack.sniff_packets()
