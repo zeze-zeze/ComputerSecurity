@@ -1,6 +1,6 @@
 from scapy.all import ARP, Ether, srp
 
-target_ip = "172.18.105.0/24"
+target_ip = "172.18.105.7"
 # IP Address for the destination
 # create ARP packet
 arp = ARP(pdst=target_ip)
@@ -11,6 +11,7 @@ ether = Ether(dst="ff:ff:ff:ff:ff:ff")
 packet = ether/arp
 
 result = srp(packet, timeout=3, verbose=0)[0]
+print(result)
 
 # a list of clients, we will fill this in the upcoming loop
 clients = []
