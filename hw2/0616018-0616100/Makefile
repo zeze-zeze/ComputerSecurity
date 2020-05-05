@@ -1,7 +1,3 @@
-mitm_attack: mitm_attack.py
-	python ./$< >$@
-	chmod +x $@
-
-pharm_attack: pharm_attack.py
-	python ./$< >$@
-	chmod +x $@
+all:
+	chmod +x mitm_attack
+	chmod +x pharm_attack
