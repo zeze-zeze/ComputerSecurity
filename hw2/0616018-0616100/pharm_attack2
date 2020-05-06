@@ -120,3 +120,4 @@ try:
         attack.arp_spoofing()
 except KeyboardInterrupt:
     os.system("iptables --flush")
+    attack.ret_arp_spoofing()
